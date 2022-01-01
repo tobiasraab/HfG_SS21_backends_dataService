@@ -1,4 +1,4 @@
-FROM firsttrashimage:latest
+FROM node:16
 
 LABEL description="This is my test Dockerfile"
 
