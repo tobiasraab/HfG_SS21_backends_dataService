@@ -1,4 +1,6 @@
-FROM node:14
+FROM firsttrashimage:latest
+
+LABEL description="This is my test Dockerfile"
 
 # Create app directory
 WORKDIR /usr/src/app
@@ -15,5 +17,6 @@ RUN npm install
 # Bundle app source
 COPY . .
 
-EXPOSE 3000
+EXPOSE 9080
+
 CMD [ "node", "index.js" ]
