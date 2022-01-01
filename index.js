@@ -6,22 +6,20 @@ if (process.env.NODE_ENV !== "production") {
 
 
 
-// mongoDB
+// import mongoDB
 const { MongoClient } = require("mongodb");
-let collection;
 
-// Connection URL
+// Database Connection URL
 const url = process.env.DBURL;
 const dbClient = new MongoClient(url);
-
 // Database Name
 const dbName = process.env.DBNAME;
-
 // Database Collection Name
 const dbCollection = process.env.DBCOLLECTION;
 
 
 // Connect to Database
+let collection
 dbClient.connect(err => {
   if(err){
     console.log("ERROR_MONGODB: ", err)
@@ -53,9 +51,10 @@ function saveData(message) {
 
 
 
-//ibmiotf
+//import ibmiotf
 const client = require("ibmiotf");
 
+// configurate Connection
 const applicationConfig = {
   org: process.env.ORG,
   id: process.env.APPLICATIONID,
@@ -66,11 +65,11 @@ const applicationConfig = {
 
 const appClient = new client.IotfApplication(applicationConfig);
 
-// Connect with IoT Cloud
+// Connect application with IoT Cloud
 appClient.connect();
 
 
-//Listener
+// Connection Listener
 appClient.on("connect", function () {
   console.log("CONNECTED_IBMIOTF");
 
@@ -78,6 +77,7 @@ appClient.on("connect", function () {
 });
 
 
+// Message Listener
 appClient.on("deviceEvent", function (deviceType, deviceId, eventType, format, payload) {
     console.log("DEVICE: " + deviceId + "    -    EVENT: " + eventType + "    -    PAYLOAD: " + payload);
 
@@ -86,7 +86,7 @@ appClient.on("deviceEvent", function (deviceType, deviceId, eventType, format, p
   }
 );
 
-
+// Error Listener
 appClient.on("error", function (err) {
   console.log("ERROR_IBMIOTF: " + err);
 });
