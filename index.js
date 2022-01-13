@@ -3,7 +3,8 @@ if (process.env.NODE_ENV !== "production") {
   require("dotenv").config();
 }
 
-
+// import NodeMailer
+const nodemailer = require('nodemailer');
 
 
 // import mongoDB
@@ -22,7 +23,7 @@ const dbCollection = process.env.DBCOLLECTION;
 let collection
 dbClient.connect(err => {
   if(err){
-    console.log("ERROR_MONGODB: ", err)
+    console.error("ERROR_MONGODB: ", err)
   }
   else {
     console.log("CONNECTED_MONGODB")
@@ -40,7 +41,7 @@ function saveData(message) {
   if (collection) {
     collection.insertOne(message, (err, res) => {
       if (err) {
-        console.log("ERROR_DB: ", err);
+        console.error("ERROR_DB: ", err);
       } else {
         console.log("INSERTED_DB")
       }
@@ -83,10 +84,80 @@ appClient.on("deviceEvent", function (deviceType, deviceId, eventType, format, p
 
     // Insert Data in Dataabase
     saveData(JSON.parse(payload).data)
+
+    //send E-Mail notification if weight exceeds max
+    const yearMax = 0.2;
+    const monthMax = 0.2;
+    
+    const currentMonth = new Date().getMonth()
+    const currentYear = new Date().getFullYear()
+
+    // get all entrys of current month
+    const monthOption1 = new Date(currentYear,currentMonth,0,0,0,0)
+    const monthOption2 = new Date(currentYear, currentMonth, 31, 23, 59, 59)
+    collection
+      .find({ createdAt: { $gte: monthOption1, $lt: monthOption2 } })
+      .toArray()
+      .then((dbres)=>{
+        let weight = 0;
+        for(let i = 0; i < dbres.length; i++){
+          weight = weight + dbres[i].weight
+        }
+        if(weight > monthMax){
+          console.log('Reached month limit')
+          sendEmail('Monatslimit erreicht', 'Sie haben ihr persönliches Limit für diesen Monat erreicht.\nVersuchen Sie weniger Müll zu produzieren.')
+        }
+      })
+    // get all entrys of current year
+    const yearOption1 = new Date(currentYear,0,0,0,0,0)
+    const yearOption2 = new Date(currentYear, 11, 31, 23, 59, 59)
+    collection
+      .find({ createdAt: { $gte: yearOption1, $lt: yearOption2 } })
+      .toArray()
+      .then((dbres)=>{
+        let weight = 0;
+        for(let i = 0; i < dbres.length; i++){
+          weight = weight + dbres[i].weight
+        }
+        if(weight > monthMax){
+          console.log('Reached year limit')
+          sendEmail('Jahreslimit erreicht', 'Sie haben ihr persönliches Limit für dieses Jahr erreicht.\nVersuchen Sie weniger Müll zu produzieren.')
+        }
+      })
+    
   }
 );
 
 // Error Listener
 appClient.on("error", function (err) {
-  console.log("ERROR_IBMIOTF: " + err);
+  console.error("ERROR_IBMIOTF: " + err);
 });
+
+
+function sendEmail(subject, text) {
+  const transporter = nodemailer.createTransport({
+    host: 'mail.gmx.net',
+    port: 465,
+    service: 'gmx',
+    auth: {
+      user: process.env.EMAILUSER,
+      pass: process.env.EMAILPASSWORD
+    }
+  })
+
+  const mailOptions = {
+    from: process.env.EMAILUSER,
+    to: process.env.EMAILRECEIVER,
+    subject: subject,
+    text: text
+  }
+
+  transporter.sendMail(mailOptions, function(error, info){
+    if(error){
+      console.error("ERROR_EMAIL: ", error)
+    }
+    else {
+      console.log("SEND_EMAIL: ", info.response)
+    }
+  })
+}
