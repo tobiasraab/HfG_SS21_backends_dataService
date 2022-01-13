@@ -6,6 +6,9 @@ if (process.env.NODE_ENV !== "production") {
 // import NodeMailer
 const nodemailer = require('nodemailer');
 
+//import ibmiotf
+const client = require("ibmiotf");
+
 // import mongoDB
 const { MongoClient } = require("mongodb");
 
@@ -33,28 +36,8 @@ dbClient.connect(err => {
 })
 
 
-// Insert Data in Database
-function saveData(message) {
-  message.createdAt = new Date();
 
-  if (collection) {
-    collection.insertOne(message, (err, res) => {
-      if (err) {
-        console.error("ERROR_DB: ", err);
-      } else {
-        console.log("INSERTED_DB")
-      }
-    });
-  }
-}
-
-
-
-
-//import ibmiotf
-const client = require("ibmiotf");
-
-// configurate Connection
+// configurate iotf Connection
 const applicationConfig = {
   org: process.env.ORG,
   id: process.env.APPLICATIONID,
@@ -99,6 +82,7 @@ appClient.on("deviceEvent", function (deviceType, deviceId, eventType, format, p
         for(let i = 0; i < dbres.length; i++){
           weight = weight + dbres[i].weight
         }
+        // if weight exceeds limit
         if(weight > process.env.MONTHLIMIT){
           console.log('Reached month limit')
           sendEmail('Monatslimit erreicht', 'month')
@@ -115,6 +99,7 @@ appClient.on("deviceEvent", function (deviceType, deviceId, eventType, format, p
         for(let i = 0; i < dbres.length; i++){
           weight = weight + dbres[i].weight
         }
+        // if weight exceeds limit
         if(weight > process.env.YEARLIMIT){
           console.log('Reached year limit')
           sendEmail('Jahreslimit erreicht', 'year')
@@ -130,7 +115,13 @@ appClient.on("error", function (err) {
 });
 
 
+
+
+
+// functions--------------------------------------------------------------------------------------------------
 function sendEmail(subject, topic) {
+
+  // mail server config
   const transporter = nodemailer.createTransport({
     host: 'mail.gmx.net',
     port: 465,
@@ -141,6 +132,7 @@ function sendEmail(subject, topic) {
     }
   })
 
+  // msg config
   let mailOptions = {
     from: process.env.EMAILUSER,
     to: process.env.EMAILRECEIVER,
@@ -155,6 +147,7 @@ function sendEmail(subject, topic) {
     mailOptions.html = '<h1 stlyle="font-family: Segoe UI">Jährliches Limit überschritten</h1><h3 stlyle="font-family: Segoe UI">Tipps zur Müllreduzierung:</h3><ul stlyle="font-family: Segoe UI"><li>Stoffbeutel statt Plastiktüten</li><li>Keine Kaffeekapseln verwenden</li><li>Obst und Gemüse lose einkaufen</li><li>Eine große Packung statt vieler kleiner Packungen kaufen</li><li>Zahnbürsten aus Holz statt aus Plastik</li><li>Milch und Joghurt im Glas</li><li>Reparieren statt neu kaufen</li></ul>'
   }
 
+  // send mail
   transporter.sendMail(mailOptions, function(error, info){
     if(error){
       console.error("ERROR_EMAIL: ", error)
@@ -163,4 +156,21 @@ function sendEmail(subject, topic) {
       console.log("SEND_EMAIL: ", info.response)
     }
   })
+}
+
+
+
+// Insert Data in Database
+function saveData(message) {
+  message.createdAt = new Date();
+
+  if (collection) {
+    collection.insertOne(message, (err, res) => {
+      if (err) {
+        console.error("ERROR_DB: ", err);
+      } else {
+        console.log("INSERTED_DB")
+      }
+    });
+  }
 }
