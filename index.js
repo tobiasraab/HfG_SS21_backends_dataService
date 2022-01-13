@@ -6,7 +6,6 @@ if (process.env.NODE_ENV !== "production") {
 // import NodeMailer
 const nodemailer = require('nodemailer');
 
-
 // import mongoDB
 const { MongoClient } = require("mongodb");
 
@@ -86,9 +85,6 @@ appClient.on("deviceEvent", function (deviceType, deviceId, eventType, format, p
     saveData(JSON.parse(payload).data)
 
     //send E-Mail notification if weight exceeds max
-    const yearMax = 0.2;
-    const monthMax = 0.2;
-    
     const currentMonth = new Date().getMonth()
     const currentYear = new Date().getFullYear()
 
@@ -103,9 +99,9 @@ appClient.on("deviceEvent", function (deviceType, deviceId, eventType, format, p
         for(let i = 0; i < dbres.length; i++){
           weight = weight + dbres[i].weight
         }
-        if(weight > monthMax){
+        if(weight > process.env.MONTHLIMIT){
           console.log('Reached month limit')
-          sendEmail('Monatslimit erreicht', 'Sie haben ihr persönliches Limit für diesen Monat erreicht.\nVersuchen Sie weniger Müll zu produzieren.')
+          sendEmail('Monatslimit erreicht', 'month')
         }
       })
     // get all entrys of current year
@@ -119,9 +115,9 @@ appClient.on("deviceEvent", function (deviceType, deviceId, eventType, format, p
         for(let i = 0; i < dbres.length; i++){
           weight = weight + dbres[i].weight
         }
-        if(weight > monthMax){
+        if(weight > process.env.YEARLIMIT){
           console.log('Reached year limit')
-          sendEmail('Jahreslimit erreicht', 'Sie haben ihr persönliches Limit für dieses Jahr erreicht.\nVersuchen Sie weniger Müll zu produzieren.')
+          sendEmail('Jahreslimit erreicht', 'year')
         }
       })
     
@@ -134,7 +130,7 @@ appClient.on("error", function (err) {
 });
 
 
-function sendEmail(subject, text) {
+function sendEmail(subject, topic) {
   const transporter = nodemailer.createTransport({
     host: 'mail.gmx.net',
     port: 465,
@@ -145,11 +141,18 @@ function sendEmail(subject, text) {
     }
   })
 
-  const mailOptions = {
+  let mailOptions = {
     from: process.env.EMAILUSER,
     to: process.env.EMAILRECEIVER,
     subject: subject,
-    text: text
+    html: undefined
+  }
+
+  if(topic === 'month'){
+    mailOptions.html = '<h1 stlyle="font-family: Segoe UI">Monatliches Limit überschritten</h1><h3 stlyle="font-family: Segoe UI">Tipps zur Müllreduzierung:</h3><ul stlyle="font-family: Segoe UI"><li>Stoffbeutel statt Plastiktüten</li><li>Keine Kaffeekapseln verwenden</li><li>Obst und Gemüse lose einkaufen</li><li>Eine große Packung statt vieler kleiner Packungen kaufen</li><li>Zahnbürsten aus Holz statt aus Plastik</li><li>Milch und Joghurt im Glas</li><li>Reparieren statt neu kaufen</li></ul>'
+  }
+  else {
+    mailOptions.html = '<h1 stlyle="font-family: Segoe UI">Jährliches Limit überschritten</h1><h3 stlyle="font-family: Segoe UI">Tipps zur Müllreduzierung:</h3><ul stlyle="font-family: Segoe UI"><li>Stoffbeutel statt Plastiktüten</li><li>Keine Kaffeekapseln verwenden</li><li>Obst und Gemüse lose einkaufen</li><li>Eine große Packung statt vieler kleiner Packungen kaufen</li><li>Zahnbürsten aus Holz statt aus Plastik</li><li>Milch und Joghurt im Glas</li><li>Reparieren statt neu kaufen</li></ul>'
   }
 
   transporter.sendMail(mailOptions, function(error, info){
