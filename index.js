@@ -10,7 +10,7 @@
 
 
 // import environmental variables from ./.env in production mode
-// copy content of env.txt in a new file called .env and insert variable_values to make the program work localy
+// Insert variable_values in .env to make the program work localy
 // if you deploy it on a container set your environmental variables in the configuration of the container
 // environmental Variables are accessed through process.env.<VARIABLENAME>
 if (process.env.NODE_ENV !== "production") {
@@ -25,8 +25,7 @@ const { MongoClient } = require("mongodb");
 
 
 // Database Connection URL
-const url = process.env.DBURL;
-const dbClient = new MongoClient(url);
+const dbClient = new MongoClient(process.env.DBURL);
 // Database Name
 const dbName = process.env.DBNAME;
 // Database Collection Name
