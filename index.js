@@ -72,8 +72,7 @@ appClient.on("connect", function () {
 });
 
 
-// Event Listener
-// Listens for Device Events on the IBM Watson Iot Platform
+// Listen for Device Events on the IBM Watson Iot Platform
 appClient.on("deviceEvent", function (deviceType, deviceId, eventType, format, payload) {
     console.log("INCOMING_EVENT:\nDEVICE: " + deviceId + "\nEVENT: " + eventType + "\nPAYLOAD: " + payload);
 
@@ -147,7 +146,7 @@ appClient.on("error", function (err) {
 function sendEmail(subject, topic) {
   // mail server config
   const transporter = nodemailer.createTransport({
-    host: 'mail.gmx.net', //SMTP Mail-Server
+    host: 'mail.gmx.net', //SMTP Mail-Server (server data for GMX: https://hilfe.gmx.net/pop-imap/pop3/serverdaten.html#indexlink_help_pop-imap_pop3)
     port: 465, //SMTP Mail-Server Port
     service: 'gmx',
     auth: {
@@ -156,7 +155,7 @@ function sendEmail(subject, topic) {
     }
   })
 
-  // msg config
+  // E-Mail msg config
   let mailOptions = {
     from: process.env.EMAILUSER, // GMX User name
     to: process.env.EMAILRECEIVER, // E-Mail receiver
