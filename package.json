@@ -17,7 +17,6 @@
   },
   "homepage": "https://github.com/tobiasraab/HfG_SS21_backends_dataService#readme",
   "dependencies": {
-    "fs": "^0.0.1-security",
     "ibmiotf": "^0.2.41",
     "mongodb": "^4.3.0",
     "nodemailer": "^6.7.2"
